@@ -1,0 +1,1 @@
+By create large random datasets, we can create charts that adapt and react to any dataset. This bl.ock allows users to generate any desired number of lines and any desired number of points and see the response of the chart change over time.

@@ -3,38 +3,61 @@
 <html>
 <style>
 
+div {
+  padding-left: 60px;
+  padding-top: 5px;
+  width: 30%;
+  margin: 0 auto;
+  font: 14px;
+}
+
+input {
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  text-align: center;
+  font: 14px;
+  width: 60px;
+}
 </style>
 
 <body>
-  Number of datapoints: 
-  <input id="datacount" onkeyup="render()" value="20" name="datapoints"></input>
+  <div>
+    Number of datapoints: 
+    <input id="datacount" onkeyup="render()" value="20" name="datapoints"></input>
+  </div>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 var width = 960,
-    height = 500;
+    height = 500 - 10 - 14; // adjust for height of input bar div
 
 var color = d3.scale.category20();
 
+// draw and append the container
 var svg = d3.select("body").append("svg")
   .attr("width", width).attr("height", height);
 
+// set the thickness of the inner and outer radii
 var min = Math.min(width, height);
 var oRadius = min / 2 * 0.9;
 var iRadius = min / 2 * 0.85;
 
-// calculates values
+// construct default pie laoyut
 var pie = d3.layout.pie().value(function(d){ return d; }).sort(null);
 
-// arc path calculator
+// construct arc generator
 var arc = d3.svg.arc()
   .outerRadius(oRadius)
   .innerRadius(iRadius);
 
-// creates the container
+// creates the pie chart container
 var g = svg.append('g')
   .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')'); 
 
+// generate random data
 var data = makeData(+document.getElementById("datacount").value);
+
+// enter data and draw pie chart
 var path = g.datum(data).selectAll("path")
   .data(pie)
   .enter().append("path")
@@ -44,7 +67,7 @@ var path = g.datum(data).selectAll("path")
     .each(function(d){ this._current = d; })
 
 function render(){
-  // make new data
+  // generate new random data
   data = makeData(+document.getElementById("datacount").value);
   // add transition to new path
   g.datum(data).selectAll("path").data(pie).transition().duration(1000).attrTween("d", arcTween)
@@ -64,8 +87,7 @@ function render(){
 }
 
 render();
-setInterval(render,2000)
-
+var reRender = setInterval(render,2000);
 
 function makeData(size){
   return d3.range(size).map(function(item){
@@ -83,6 +105,5 @@ function arcTween(a) {
     return arc(i(t));
   };
 }
-
 </script>
 </body>
