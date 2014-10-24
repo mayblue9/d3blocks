@@ -1,0 +1,111 @@
+<!DOCTYPE HTML>
+<meta charset="utf-8">
+<style>
+
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
+
+.x.axis path {
+  display: none;
+}
+
+.linepath {
+  fill: none;
+  stroke-width: 1.5px;
+}
+
+</style>
+<body>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+
+var width = 700;
+var height = 700;
+
+var margin = {top:20, right:20, bottom:20, left:50};
+
+var svg = d3.select('body').append('svg')
+  .attr('width', width).attr('height',height)
+  .append('g')
+    .attr("transform", "translate(" + margin.left + ',' + margin.right + ')');
+
+var xScale = d3.scale.linear()
+  .range([0,width - margin.left - margin.right])
+
+var yScale = d3.scale.linear()
+  .range([(height - margin.top - margin.bottom)/2, 0])
+
+var yScaleLabel = d3.scale.linear()
+  .range([(height - margin.top - margin.bottom)/2, 0])
+
+var line = d3.svg.line().interpolate('monotone')
+  .x(function(d){ return xScale(d.income); })
+  .y(function(d){ return yScale(d.citizens); });
+
+
+var filteredData = [];
+d3.csv('averages.csv',function(data){
+  data.forEach(function(item){
+    var numberOfPeopleWithIncome = +item['Total'].split(',').join('');
+    var upperRange = item['Characteristic'].split(' to ');
+    if (upperRange[0] === 'Under $5,000') filteredData.push({ income:0, citizens:numberOfPeopleWithIncome},{ income:5000, citizens:numberOfPeopleWithIncome});
+    if (upperRange[0] === '$200,000 and over') filteredData.push({ income:200000, citizens:numberOfPeopleWithIncome});
+    if (upperRange.length > 1 ){
+      var incomeTexttoNumber = +upperRange[1].substring(1).split(',').join('');
+      filteredData.push({ income:incomeTexttoNumber, citizens:numberOfPeopleWithIncome});
+    }
+  })
+  lineGraph(filteredData);
+});
+
+function lineGraph(data){
+  var yMax = data.reduce(function(pv,cv){
+    return Math.max(pv, cv.citizens);
+  },0);
+
+  var yTotal = data.reduce(function(pv,cv){
+    return +pv + +cv.citizens;
+  },0);
+
+  xScale.domain([0,200000]);
+  yScale.domain([0,yMax]);
+  yScaleLabel.domain([0,yMax/yTotal]);
+
+  svg.append('circle')
+    .attr('class','overall--circle')
+    .attr('cx',(width - margin.left - margin.right)/2 )
+    .attr('cy', (height - margin.top - margin.bottom)/2 )
+    .attr('r',(width - margin.left - margin.right)/2 )
+    .style('opacity', .2)
+
+  svg.append('rect')
+    .attr('class','cover--rectangle')
+    .attr('x', 0 )
+    .attr('y', margin.top - margin.bottom )
+    .attr('width', width - margin.left )
+    .attr('height', (height - margin.top - margin.bottom) / 2)
+    .style('fill', 'white')
+
+
+  var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
+  svg.append('g').attr('class','x axis').call(xAxis)
+    .attr('transform', 'translate(' + 0 + ',' + (height - margin.top - margin.bottom)/2 + ')');
+
+  var yAxisLabel = d3.svg.axis().scale(yScaleLabel).orient("left")
+    .ticks(7).tickFormat(function(d){ return Math.round(d*100) + '%'; });
+  svg.append("g").attr("class","y axis").call(yAxisLabel);
+
+  var lines = svg.append('g').attr("class","linechart").selectAll(".linepath").data(data);
+ 
+  lines.enter().append("path")
+    .attr("class","linepath")
+    .attr("d", line(data) ).style("stroke","grey");
+
+}
+
+</script>
+</body>
