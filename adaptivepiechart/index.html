@@ -52,7 +52,12 @@ var arc = d3.svg.arc()
 
 // creates the pie chart container
 var g = svg.append('g')
-  .attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')'); 
+var g = svg.append('g')
+  .attr('transform', function(){
+    if ( window.innerWidth >= 960 ) var shiftWidth = width / 2;
+    if ( window.innerWidth < 960 ) var shiftWidth = width / 3;
+    return 'translate(' + shiftWidth + ',' + height / 2 + ')';
+  })
 
 // generate random data
 var data = makeData(+document.getElementById("datacount").value);
