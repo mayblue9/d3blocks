@@ -2,6 +2,11 @@
 <meta charset="utf-8">
 <style>
 
+*{
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
 .axis path,
 .axis line {
   fill: none;
@@ -23,24 +28,27 @@
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
-var width = 700;
-var height = 700;
+var width = window.innerWidth;
+var height = window.innerHeight;
 
-var margin = {top:20, right:20, bottom:20, left:50};
+// top and right dont seem to work
+var margin = { top:50, right:50, bottom:50, left:50};
+var maxWindowDim = width - margin.right - margin.left > height - margin.bottom - margin.top ? height : width;
 
 var svg = d3.select('body').append('svg')
   .attr('width', width).attr('height',height)
   .append('g')
-    .attr("transform", "translate(" + margin.left + ',' + margin.right + ')');
+    .attr('class','graph--container')
+    .attr("transform", "translate(" + margin.left + ',' + margin.top + ')');
 
 var xScale = d3.scale.linear()
-  .range([0,width - margin.left - margin.right])
+  .range([0, maxWindowDim - margin.right - margin.left])
 
 var yScale = d3.scale.linear()
-  .range([(height - margin.top - margin.bottom)/2, 0])
+  .range([(maxWindowDim - margin.top - margin.bottom)/2, 0])
 
 var yScaleLabel = d3.scale.linear()
-  .range([(height - margin.top - margin.bottom)/2, 0])
+  .range([(maxWindowDim - margin.top - margin.bottom)/2, 0])
 
 var line = d3.svg.line().interpolate('monotone')
   .x(function(d){ return xScale(d.income); })
@@ -48,6 +56,8 @@ var line = d3.svg.line().interpolate('monotone')
 
 
 var filteredData = [];
+var yMax = 0;
+var yTotal = 0;
 d3.csv('averages.csv',function(data){
   data.forEach(function(item){
     var numberOfPeopleWithIncome = +item['Total'].split(',').join('');
@@ -63,11 +73,11 @@ d3.csv('averages.csv',function(data){
 });
 
 function lineGraph(data){
-  var yMax = data.reduce(function(pv,cv){
+  yMax = data.reduce(function(pv,cv){
     return Math.max(pv, cv.citizens);
   },0);
 
-  var yTotal = data.reduce(function(pv,cv){
+  yTotal = data.reduce(function(pv,cv){
     return +pv + +cv.citizens;
   },0);
 
@@ -77,26 +87,25 @@ function lineGraph(data){
 
   svg.append('circle')
     .attr('class','overall--circle')
-    .attr('cx',(width - margin.left - margin.right)/2 )
-    .attr('cy', (height - margin.top - margin.bottom)/2 )
-    .attr('r',(width - margin.left - margin.right)/2 )
+    .attr('cx', (maxWindowDim - margin.right - margin.left)/2 )
+    .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
+    .attr('r',  (maxWindowDim - margin.right - margin.left)/2 )
     .style('opacity', .2)
 
   svg.append('rect')
     .attr('class','cover--rectangle')
     .attr('x', 0 )
     .attr('y', margin.top - margin.bottom )
-    .attr('width', width - margin.left )
-    .attr('height', (height - margin.top - margin.bottom) / 2)
+    .attr('width', maxWindowDim - margin.left )
+    .attr('height', (maxWindowDim - margin.top - margin.bottom) / 2)
     .style('fill', 'white')
-
 
   var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
   svg.append('g').attr('class','x axis').call(xAxis)
-    .attr('transform', 'translate(' + 0 + ',' + (height - margin.top - margin.bottom)/2 + ')');
+    .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
 
   var yAxisLabel = d3.svg.axis().scale(yScaleLabel).orient("left")
-    .ticks(7).tickFormat(function(d){ return Math.round(d*100) + '%'; });
+    .ticks(maxWindowDim/125).tickFormat(function(d){ return Math.round(d*1000)/10 + '%'; });
   svg.append("g").attr("class","y axis").call(yAxisLabel);
 
   var lines = svg.append('g').attr("class","linechart").selectAll(".linepath").data(data);
@@ -106,6 +115,40 @@ function lineGraph(data){
     .attr("d", line(data) ).style("stroke","grey");
 
 }
+
+function updateWindow(){
+  width = window.innerWidth;
+  height = window.innerHeight;  
+  maxWindowDim = width - margin.right - margin.left > height - margin.bottom - margin.top ? height : width;
+
+  d3.select('svg').attr("width", width).attr("height", height);
+  d3.select('.graph--container').attr("width", width).attr("height", height);
+  d3.select('.overall--circle')
+    .attr('cx', (maxWindowDim - margin.right - margin.left)/2 )
+    .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
+    .attr('r',  (maxWindowDim - margin.right - margin.left)/2 )
+
+  d3.select('.cover--rectangle')
+    .attr('y', margin.top - margin.bottom )
+    .attr('width', maxWindowDim - margin.left )
+    .attr('height', (maxWindowDim - margin.top - margin.bottom) / 2)
+
+  xScale.range([0,maxWindowDim - margin.left - margin.right])
+  yScale.range([(maxWindowDim - margin.top - margin.bottom)/2, 0])
+  yScaleLabel.range([(maxWindowDim - margin.top - margin.bottom)/2, 0]) 
+
+  xAxis = d3.svg.axis().scale(xScale).orient('bottom');
+  d3.selectAll('.x.axis').call(xAxis)
+    .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
+
+  yAxisLabel = d3.svg.axis().scale(yScaleLabel).orient("left")
+    .ticks(maxWindowDim/125).tickFormat(function(d){ return Math.round(d*1000)/10 + '%'; });
+  d3.selectAll('.y.axis').call(yAxisLabel);
+
+  d3.selectAll(".linepath").attr("d", line(filteredData) );
+}
+
+window.onresize = updateWindow;
 
 </script>
 </body>
