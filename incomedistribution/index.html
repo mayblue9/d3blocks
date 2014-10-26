@@ -7,6 +7,10 @@
   box-sizing: border-box;
 }
 
+body {
+  font: 10px sans-serif;
+}
+
 .axis path,
 .axis line {
   fill: none;
@@ -20,13 +24,13 @@
 
 .linepath {
   fill: none;
-  stroke-width: 1.5px;
+  stroke-width: 1px;
 }
 
 </style>
 <body>
   <div>
-  <input style="width:100%" placeholder="input your salary"></input>
+  <input id="usersalary" style="width:100%" placeholder="input your salary" onkeyup="calcPercentage()" onmousedown="calcPercentage()" onmouseup="calcPercentage()" type="number" step="5000" min="0">
   </div>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
@@ -50,17 +54,23 @@ var xScale = d3.scale.linear()
 var yScale = d3.scale.linear()
   .range([(maxWindowDim - margin.top - margin.bottom)/2, 0])
 
-var yScaleLabel = d3.scale.linear()
-  .range([(maxWindowDim - margin.top - margin.bottom)/2, 0])
-
 var line = d3.svg.line().interpolate('monotone')
   .x(function(d){ return xScale(d.income); })
   .y(function(d){ return yScale(d.citizens); });
 
+// Based on Dennis Gilbert, 2002
+var brackets = [{desc:'underclass', lowerbracket: 0 * 200000}, 
+                {desc:'working poor',lowerbracket: 0.12 * 200000},
+                {desc:'working class',lowerbracket: 0.25 * 200000},
+                {desc:'lower middle class',lowerbracket: 0.55 * 200000},
+                {desc:'upper middle class',lowerbracket: 0.85 * 200000},
+                {desc:'upper class',lowerbracket: 0.99 * 200000},
+                {desc:'', lowerbracket: 1.0 * 200000}];
 
 var filteredData = [];
+var salaryData = [];
 var yMax = 0;
-var yTotal = 0;
+// var yTotal = 0;
 d3.csv('averages.csv',function(data){
   data.forEach(function(item){
     var numberOfPeopleWithIncome = +item['Total'].split(',').join('');
@@ -72,6 +82,7 @@ d3.csv('averages.csv',function(data){
       filteredData.push({ income:incomeTexttoNumber, citizens:numberOfPeopleWithIncome});
     }
   })
+  salaryData[0] = filteredData.slice(0,2);
   lineGraph(filteredData);
 });
 
@@ -80,43 +91,62 @@ function lineGraph(data){
     return Math.max(pv, cv.citizens);
   },0);
 
-  yTotal = data.reduce(function(pv,cv){
-    return +pv + +cv.citizens;
-  },0);
+  // yTotal = data.reduce(function(pv,cv){
+    // return +pv + +cv.citizens;
+  // },0);
 
   xScale.domain([0,200000]);
   yScale.domain([0,yMax]);
-  yScaleLabel.domain([0,yMax/yTotal]);
 
-  svg.append('circle')
-    .attr('class','overall--circle')
-    .attr('cx', (maxWindowDim - margin.right - margin.left)/2 )
+  var salary = svg.append('g').attr('class','salary')
+    .style('fill','#11a282')
+
+  var outlines = svg.append('g').attr('class','outlines')
+    .style('fill','none')
+    .style('stroke','#878174')
+    .style('stroke-width',1)
+
+  outlines.append('g').attr('class','outline--brackets').selectAll('.outlines--circle').data(brackets).enter().append('circle')
+    .attr('class','outlines--circle')
+    .attr('cx', function(d){
+      return (xScale(d.lowerbracket) + margin.right - margin.left)/2
+    })
     .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
-    .attr('r',  (maxWindowDim - margin.right - margin.left)/2 )
-    .style('opacity', .2)
+    .attr('r',  function(d){
+      return xScale(d.lowerbracket)/2
+    })
 
-  svg.append('rect')
-    .attr('class','cover--rectangle')
+  salary.append('circle')
+    .attr('class','salary--circle')
+    .attr('cx', xScale(0) / 2 )
+    .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
+    .attr('r',  xScale(0) / 2 )
+    .style('opacity', .7)
+
+  outlines.append('rect')
+    .attr('class','outline--cover')
     .attr('x', 0 )
     .attr('y', margin.top - margin.bottom )
     .attr('width', maxWindowDim - margin.left )
     .attr('height', (maxWindowDim - margin.top - margin.bottom) / 2)
     .style('fill', 'white')
+    .style('stroke', 'white')
 
   var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
   svg.append('g').attr('class','x axis').call(xAxis)
     .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
 
-  var yAxisLabel = d3.svg.axis().scale(yScaleLabel).orient("left")
-    .ticks(maxWindowDim/125).tickFormat(function(d){ return Math.round(d*1000)/10 + '%'; });
-  svg.append("g").attr("class","y axis").call(yAxisLabel);
-
-  var lines = svg.append('g').attr("class","linechart").selectAll(".linepath").data(data);
+  var lines = outlines.append('g').attr("class","outline--linechart").selectAll(".linepath").data(data);
  
   lines.enter().append("path")
     .attr("class","linepath")
-    .attr("d", line(data) ).style("stroke","grey");
+    .attr("d", line(data));
 
+  var salaryLines = svg.append('g').attr("class","salary--linechart").selectAll(".salarypath").data(salaryData);
+
+  salaryLines.enter().append("path")
+    .attr("class","salarypath")
+    .attr("d", line(salaryData)).style('stroke-width',5).style('stroke','red').style('fill','none');
 }
 
 function updateWindow(){
@@ -124,31 +154,50 @@ function updateWindow(){
   height = window.innerHeight;  
   maxWindowDim = width - margin.right - margin.left > height - margin.bottom - margin.top ? height : width;
 
+  xScale.range([0,maxWindowDim - margin.left - margin.right])
+  yScale.range([(maxWindowDim - margin.top - margin.bottom)/2, 0])
+  
   d3.select('svg').attr("width", width).attr("height", height);
   d3.select('.graph--container').attr("width", width).attr("height", height);
-  d3.select('.overall--circle')
-    .attr('cx', (maxWindowDim - margin.right - margin.left)/2 )
+  d3.selectAll('.outlines--circle')
+    .attr('cx', function(d){
+      return (xScale(d.lowerbracket) + margin.right - margin.left)/2;
+    })
     .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
-    .attr('r',  (maxWindowDim - margin.right - margin.left)/2 )
+    .attr('r',  function(d){
+      return xScale(d.lowerbracket)/2;
+    })
 
-  d3.select('.cover--rectangle')
+  d3.select('.salary--circle')
+    .attr('cx', xScale(Math.min(document.getElementById('usersalary').value,200000)) / 2 )
+    .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
+    .attr('r',  xScale(Math.min(document.getElementById('usersalary').value,200000)) / 2 )
+
+  d3.select('.outline--cover')
     .attr('y', margin.top - margin.bottom )
     .attr('width', maxWindowDim - margin.left )
     .attr('height', (maxWindowDim - margin.top - margin.bottom) / 2)
-
-  xScale.range([0,maxWindowDim - margin.left - margin.right])
-  yScale.range([(maxWindowDim - margin.top - margin.bottom)/2, 0])
-  yScaleLabel.range([(maxWindowDim - margin.top - margin.bottom)/2, 0]) 
 
   xAxis = d3.svg.axis().scale(xScale).orient('bottom');
   d3.selectAll('.x.axis').call(xAxis)
     .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
 
-  yAxisLabel = d3.svg.axis().scale(yScaleLabel).orient("left")
-    .ticks(maxWindowDim/125).tickFormat(function(d){ return Math.round(d*1000)/10 + '%'; });
-  d3.selectAll('.y.axis').call(yAxisLabel);
+  d3.selectAll('.linepath').attr('d', line(filteredData) );
 
-  d3.selectAll(".linepath").attr("d", line(filteredData) );
+  d3.selectAll('.salarypath').attr('d', line(salaryData));
+}
+
+function calcPercentage(){
+  var userSalary = Math.min(document.getElementById('usersalary').value,200000)
+  d3.select('.salary--circle').transition().duration(1000)
+    .attr('cx', xScale(userSalary) / 2 )
+    .attr('r',  xScale(userSalary) / 2 )
+
+  salaryData = [];
+  filteredData.forEach(function(d){
+    if ( d.income < userSalary) salaryData.push(d);
+  })
+  d3.selectAll('.salarypath') .attr('d', line(salaryData));
 }
 
 window.onresize = updateWindow;
