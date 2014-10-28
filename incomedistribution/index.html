@@ -27,6 +27,11 @@ body {
   stroke-width: 1px;
 }
 
+.area {
+    fill: #118b70;
+    stroke-width: 0;
+}
+
 </style>
 <body>
   <div>
@@ -58,14 +63,18 @@ var line = d3.svg.line().interpolate('monotone')
   .x(function(d){ return xScale(d.income); })
   .y(function(d){ return yScale(d.citizens); });
 
+var area = d3.svg.area()
+  .x(function(d){ return xScale(d.income); })
+  .y0((maxWindowDim - margin.top - margin.bottom)/2)
+  .y1(function(d){ return yScale(d.citizens); });
+
 // Based on Dennis Gilbert, 2002
 var brackets = [{desc:'underclass', lowerbracket: 0 * 200000}, 
                 {desc:'working poor',lowerbracket: 0.12 * 200000},
                 {desc:'working class',lowerbracket: 0.25 * 200000},
                 {desc:'lower middle class',lowerbracket: 0.55 * 200000},
                 {desc:'upper middle class',lowerbracket: 0.85 * 200000},
-                {desc:'upper class',lowerbracket: 0.99 * 200000},
-                {desc:'', lowerbracket: 1.0 * 200000}];
+                {desc:'upper class',lowerbracket: 0.99 * 200000}];
 
 var filteredData = [];
 var salaryData = [];
@@ -76,13 +85,16 @@ d3.csv('averages.csv',function(data){
     var numberOfPeopleWithIncome = +item['Total'].split(',').join('');
     var upperRange = item['Characteristic'].split(' to ');
     if (upperRange[0] === 'Under $5,000') filteredData.push({ income:0, citizens:numberOfPeopleWithIncome},{ income:5000, citizens:numberOfPeopleWithIncome});
-    if (upperRange[0] === '$200,000 and over') filteredData.push({ income:200000, citizens:numberOfPeopleWithIncome});
+    if (upperRange[0] === '$200,000 and over'){
+      filteredData.push({ income:200000, citizens:numberOfPeopleWithIncome});
+      filteredData.push({ income:201000, citizens:numberOfPeopleWithIncome});
+    }
     if (upperRange.length > 1 ){
       var incomeTexttoNumber = +upperRange[1].substring(1).split(',').join('');
       filteredData.push({ income:incomeTexttoNumber, citizens:numberOfPeopleWithIncome});
     }
   })
-  salaryData[0] = filteredData.slice(0,2);
+  salaryData = filteredData.slice(0,2);
   lineGraph(filteredData);
 });
 
@@ -95,7 +107,7 @@ function lineGraph(data){
     // return +pv + +cv.citizens;
   // },0);
 
-  xScale.domain([0,200000]);
+  xScale.domain([0,201000]);
   yScale.domain([0,yMax]);
 
   var salary = svg.append('g').attr('class','salary')
@@ -143,21 +155,32 @@ function lineGraph(data){
     })
     .attr('y2', (maxWindowDim - margin.top - margin.bottom)/2 + 1)
 
+
   var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
   svg.append('g').attr('class','x axis').call(xAxis)
     .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
 
-  var lines = outlines.append('g').attr("class","outlines--linechart").selectAll(".linepath").data(data);
+  var fill = outlines.append('g').attr('class',"outlines--linearea");
+
+  fill.append('path').datum(data)
+    .attr('class',"area")
+    .attr('d', area)
+    .style('opacity',0.30);
+
+ var lines = outlines.append('g').attr('class',"outlines--linechart");
  
-  lines.enter().append("path")
-    .attr("class","linepath")
-    .attr("d", line(data));
+  lines.append('path').datum(data)
+    .attr('class','linepath')
+    .attr('d', line);
 
-  // var salaryLines = svg.append('g').attr("class","salary--linechart").selectAll(".salarypath").data(salaryData);
+  var salaryLines = svg.append('g').attr('class',"salary--linechart");
 
-  // salaryLines.enter().append("path")
-  //   .attr("class","salarypath")
-  //   .attr("d", line(salaryData)).style('stroke-width',5).style('stroke','red').style('fill','none');
+  salaryLines.append('path').datum(salaryData)
+    .attr('class',"salarypath")
+    .attr('d', line)
+    .style('stroke','purple')
+    .style('stroke-width',2)
+    .style('fill','none')
 }
 
 function updateWindow(){
@@ -190,9 +213,9 @@ function updateWindow(){
     .attr('y2', (maxWindowDim - margin.top - margin.bottom)/2 + 1)
 
   d3.select('.salary--circle')
-    .attr('cx', xScale(Math.min(document.getElementById('usersalary').value,200000)) / 2 )
+    .attr('cx', xScale(Math.min(document.getElementById('usersalary').value, 201000)) / 2 )
     .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
-    .attr('r',  xScale(Math.min(document.getElementById('usersalary').value,200000)) / 2 )
+    .attr('r',  xScale(Math.min(document.getElementById('usersalary').value, 201000)) / 2 )
 
   d3.select('.outline--cover')
     .attr('y', margin.top - margin.bottom )
@@ -203,22 +226,24 @@ function updateWindow(){
   d3.selectAll('.x.axis').call(xAxis)
     .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
 
-  d3.selectAll('.linepath').attr('d', line(filteredData) );
+  area.y0((maxWindowDim - margin.top - margin.bottom)/2)
+  d3.selectAll('.linepath').attr('d', line );
+  d3.selectAll('.area').attr('d', area );
 
-  d3.selectAll('.salarypath').attr('d', line(salaryData));
+  d3.selectAll('.salarypath').attr('d', line);
 }
 
 function calcPercentage(){
-  var userSalary = Math.min(document.getElementById('usersalary').value,200000)
+  var userSalary = Math.min(document.getElementById('usersalary').value,201000)
   d3.select('.salary--circle').transition().duration(1000)
     .attr('cx', xScale(userSalary) / 2 )
     .attr('r',  xScale(userSalary) / 2 )
 
-  // salaryData = [];
-  // filteredData.forEach(function(d){
-  //   if ( d.income < userSalary) salaryData.push(d);
-  // })
-  // d3.selectAll('.salarypath') .attr('d', line(salaryData));
+  salaryData = [];
+  filteredData.forEach(function(d){
+    if ( d.income < userSalary) salaryData.push(d);
+  })
+  d3.selectAll('.salarypath').datum(salaryData).attr('d', line);
 }
 
 window.onresize = updateWindow;
