@@ -106,7 +106,7 @@ function lineGraph(data){
     .style('stroke','#878174')
     .style('stroke-width',1)
 
-  outlines.append('g').attr('class','outline--brackets').selectAll('.outlines--circle').data(brackets).enter().append('circle')
+  outlines.append('g').attr('class','outlines--circles').selectAll('.outlines--circle').data(brackets).enter().append('circle')
     .attr('class','outlines--circle')
     .attr('cx', function(d){
       return (xScale(d.lowerbracket) + margin.right - margin.left)/2
@@ -123,7 +123,7 @@ function lineGraph(data){
     .attr('r',  xScale(0) / 2 )
     .style('opacity', .7)
 
-  outlines.append('rect')
+  outlines.append('g').attr('class','outlines--covers').append('rect')
     .attr('class','outline--cover')
     .attr('x', 0 )
     .attr('y', margin.top - margin.bottom )
@@ -132,21 +132,32 @@ function lineGraph(data){
     .style('fill', 'white')
     .style('stroke', 'white')
 
+   outlines.append('g').attr('class','outlines--lines').selectAll('.outlines--line').data(brackets).enter().append('line')
+    .attr('class','outlines--line')
+    .attr('x1', function(d){
+      return xScale(d.lowerbracket) + margin.right - margin.left;
+    })
+    .attr('y1', 0 )
+    .attr('x2', function(d){
+      return xScale(d.lowerbracket) + margin.right - margin.left;
+    })
+    .attr('y2', (maxWindowDim - margin.top - margin.bottom)/2 + 1)
+
   var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
   svg.append('g').attr('class','x axis').call(xAxis)
     .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
 
-  var lines = outlines.append('g').attr("class","outline--linechart").selectAll(".linepath").data(data);
+  var lines = outlines.append('g').attr("class","outlines--linechart").selectAll(".linepath").data(data);
  
   lines.enter().append("path")
     .attr("class","linepath")
     .attr("d", line(data));
 
-  var salaryLines = svg.append('g').attr("class","salary--linechart").selectAll(".salarypath").data(salaryData);
+  // var salaryLines = svg.append('g').attr("class","salary--linechart").selectAll(".salarypath").data(salaryData);
 
-  salaryLines.enter().append("path")
-    .attr("class","salarypath")
-    .attr("d", line(salaryData)).style('stroke-width',5).style('stroke','red').style('fill','none');
+  // salaryLines.enter().append("path")
+  //   .attr("class","salarypath")
+  //   .attr("d", line(salaryData)).style('stroke-width',5).style('stroke','red').style('fill','none');
 }
 
 function updateWindow(){
@@ -167,6 +178,16 @@ function updateWindow(){
     .attr('r',  function(d){
       return xScale(d.lowerbracket)/2;
     })
+
+   d3.selectAll('.outlines--line')
+    .attr('x1', function(d){
+      return xScale(d.lowerbracket) + margin.right - margin.left;
+    })
+    .attr('y1', 0 )
+    .attr('x2', function(d){
+      return xScale(d.lowerbracket) + margin.right - margin.left;
+    })
+    .attr('y2', (maxWindowDim - margin.top - margin.bottom)/2 + 1)
 
   d3.select('.salary--circle')
     .attr('cx', xScale(Math.min(document.getElementById('usersalary').value,200000)) / 2 )
@@ -193,11 +214,11 @@ function calcPercentage(){
     .attr('cx', xScale(userSalary) / 2 )
     .attr('r',  xScale(userSalary) / 2 )
 
-  salaryData = [];
-  filteredData.forEach(function(d){
-    if ( d.income < userSalary) salaryData.push(d);
-  })
-  d3.selectAll('.salarypath') .attr('d', line(salaryData));
+  // salaryData = [];
+  // filteredData.forEach(function(d){
+  //   if ( d.income < userSalary) salaryData.push(d);
+  // })
+  // d3.selectAll('.salarypath') .attr('d', line(salaryData));
 }
 
 window.onresize = updateWindow;
