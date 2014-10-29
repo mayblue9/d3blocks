@@ -32,6 +32,11 @@ body {
     stroke-width: 0;
 }
 
+.outlines--label {
+  font-size: 13px;
+  font-weight: 200;
+}
+
 </style>
 <body>
   <div>
@@ -144,7 +149,8 @@ function lineGraph(data){
     .style('fill', 'white')
     .style('stroke', 'white')
 
-   outlines.append('g').attr('class','outlines--lines').selectAll('.outlines--line').data(brackets).enter().append('line')
+   outlines.append('g').attr('class','outlines--lines')
+    .selectAll('.outlines--line').data(brackets).enter().append('line')
     .attr('class','outlines--line')
     .attr('x1', function(d){
       return xScale(d.lowerbracket) + margin.right - margin.left;
@@ -155,6 +161,16 @@ function lineGraph(data){
     })
     .attr('y2', (maxWindowDim - margin.top - margin.bottom)/2 + 1)
 
+    outlines.append('g').attr('class','outlines--labels')
+      .selectAll('.outlines--label').data(brackets).enter().append('text')
+      .attr('class','outlines--label')
+      .text( function(d){return d.desc; } )
+      .attr('transform', function(d){
+        var shiftX = xScale(d.lowerbracket) + margin.right - margin.left;
+        return "translate("+ shiftX +"," + 0 + ")rotate(-90)";
+      })
+      .style('text-anchor', 'end')
+      .attr("dy", "0.9em")
 
   var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
   svg.append('g').attr('class','x axis').call(xAxis)
@@ -229,6 +245,12 @@ function updateWindow(){
   area.y0((maxWindowDim - margin.top - margin.bottom)/2)
   d3.selectAll('.linepath').attr('d', line );
   d3.selectAll('.area').attr('d', area );
+
+  d3.selectAll('.outlines--label')
+    .attr('transform', function(d){
+      var shiftX = xScale(d.lowerbracket) + margin.right - margin.left;
+      return "translate("+ shiftX +"," + 0 + ")rotate(-90)";
+    })
 
   d3.selectAll('.salarypath').attr('d', line);
 }
