@@ -27,7 +27,12 @@ body {
   stroke-width: 1px;
 }
 
-.area {
+.outlines--linearea{
+  fill: #118b70;
+  stroke-width: 0;
+}
+
+.salary--linearea {
     fill: #118b70;
     stroke-width: 0;
 }
@@ -70,7 +75,7 @@ var line = d3.svg.line().interpolate('cardinal')
 
 var area = d3.svg.area().interpolate('cardinal')
   .x(function(d){ return xScale(d.income); })
-  .y0((maxWindowDim - margin.top - margin.bottom)/2 + 1)
+  .y0((maxWindowDim - margin.top - margin.bottom)/2 + 0.5)
   .y1(function(d){ return yScale(d.citizens); });
 
 // Based on Dennis Gilbert, 2002
@@ -117,6 +122,7 @@ d3.csv('averages.csv',function(data){
   textData = updateAnalysis(userSalary);
   initialRender(filteredData);
 });
+
 function initialRender(data){
   yMax = data.reduce(function(pv,cv){
     return Math.max(pv, cv.citizens);
@@ -130,7 +136,7 @@ function initialRender(data){
 
   var outlines = svg.append('g').attr('class','outlines')
     .style('fill','none')
-    .style('stroke','#878174')
+    .style('stroke','#BAB8AF')
     .style('stroke-width',1)
 
   outlines.append('g').attr('class','outlines--circles').selectAll('.outlines--circle').data(brackets).enter().append('circle')
@@ -148,7 +154,14 @@ function initialRender(data){
     .attr('cx', xScale(userSalary) / 2 )
     .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
     .attr('r',  xScale(userSalary) / 2 )
-    .style('opacity', .7)
+    .style('opacity', .5)
+
+  salary.append('circle')
+    .attr('class','salary--circle')
+    .attr('cx', xScale(userSalary) / 2 )
+    .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
+    .attr('r',  xScale(userSalary) / 2 )
+    .style('opacity', .3)
 
   outlines.append('g').attr('class','outlines--covers').append('rect')
     .attr('class','outline--cover')
@@ -182,16 +195,16 @@ function initialRender(data){
       .style('text-anchor', 'end')
       .attr("dy", "0.9em")
 
-  var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
-  svg.append('g').attr('class','x axis').call(xAxis)
-    .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
+  // var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
+  // svg.append('g').attr('class','x axis').call(xAxis)
+  //   .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
 
-  var fill = outlines.append('g').attr('class',"outlines--linearea");
+  var fill = outlines.append('g').attr('class',"outlines--lineareas");
 
   fill.append('path').datum(data)
-    .attr('class',"area")
+    .attr('class',"outlines--linearea")
     .attr('d', area)
-    .style('opacity',0.30);
+    .style('opacity',0.3);
 
  // var lines = outlines.append('g').attr('class',"outlines--linechart");
  
@@ -224,9 +237,17 @@ function initialRender(data){
     .attr('class','salary--description')
     .text(function(d){ return d; })
     .style('font-size', 16)
+    .style('fill','#868174')
     .attr('transform',function(d,i){
       return 'translate(' + (xScale(userSalary) + 6) + ',' + (maxWindowDim - margin.top - margin.bottom + i*28 + 30)/2 + ')'
     })
+
+  var salaryFill = outlines.append('g').attr('class',"salary--lineareas");
+
+  salaryFill.append('path').datum(salaryData)
+    .attr('class',"salary--linearea")
+    .attr('d', area)
+    .style('opacity',0.50);
 }
 
 function updateWindow(){
@@ -258,7 +279,7 @@ function updateWindow(){
     })
     .attr('y2', (maxWindowDim - margin.top - margin.bottom)/2 + 1)
 
-  d3.select('.salary--circle')
+  d3.selectAll('.salary--circle')
     .attr('cx', xScale(Math.min(document.getElementById('usersalary').value, 201000)) / 2 )
     .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
     .attr('r',  xScale(Math.min(document.getElementById('usersalary').value, 201000)) / 2 )
@@ -268,13 +289,14 @@ function updateWindow(){
     .attr('width', maxWindowDim - margin.left )
     .attr('height', (maxWindowDim - margin.top - margin.bottom) / 2)
 
-  xAxis = d3.svg.axis().scale(xScale).orient('bottom');
-  d3.selectAll('.x.axis').call(xAxis)
-    .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
+  // xAxis = d3.svg.axis().scale(xScale).orient('bottom');
+  // d3.selectAll('.x.axis').call(xAxis)
+  //   .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
 
-  area.y0((maxWindowDim - margin.top - margin.bottom)/2)
+  area.y0((maxWindowDim - margin.top - margin.bottom)/2 + .5)
   // d3.selectAll('.linepath').attr('d', line );
-  d3.selectAll('.area').attr('d', area );
+  d3.selectAll('.outlines--linearea').attr('d', area );
+  d3.selectAll('.salary--linearea').attr('d',area);
 
   d3.selectAll('.outlines--label')
     .attr('transform', function(d){
@@ -293,7 +315,6 @@ function updateWindow(){
     .attr('transform',function(d,i){
       return 'translate(' + (xScale(userSalary) + 6) + ',' + (maxWindowDim - margin.top - margin.bottom + i*28 + 30)/2 + ')'
     })
-
 }
 
 function calcPercentage(){
@@ -301,7 +322,7 @@ function calcPercentage(){
   salaryData = interpolateSalary(userSalary);
   textData = updateAnalysis(userSalary);
 
-  d3.select('.salary--circle').transition().duration(1000)
+  d3.selectAll('.salary--circle').transition().duration(1000)
     .attr('cx', xScale(userSalary) / 2 )
     .attr('r',  xScale(userSalary) / 2 )
 
@@ -318,6 +339,8 @@ function calcPercentage(){
     .attr('transform',function(d,i){
       return 'translate(' + (xScale(userSalary) + 6) + ',' + (maxWindowDim - margin.top - margin.bottom + i*28 + 30)/2 + ')'
     })
+
+  d3.selectAll('.salary--linearea').datum(salaryData).transition().duration(1000).attr('d',area);
 }
 
 function interpolateSalary(userSalary){
@@ -329,8 +352,9 @@ function interpolateSalary(userSalary){
 }
 
 function updateAnalysis(userSalary){
+  var format = d3.format('$,');
   var percent = Math.round(salaryData[salaryData.length-1].cumulCitizens / totalCitizens * 100);
-  return ['of Americans earn','less than $' + userSalary, percent + '%'];
+  return ['of Americans earn','less than ' + format(d3.round(userSalary,2)), percent + '%'];
 }
 
 window.onresize = updateWindow;
