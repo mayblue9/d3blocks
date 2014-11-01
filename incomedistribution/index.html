@@ -196,7 +196,7 @@ function initialRender(data){
  // var lines = outlines.append('g').attr('class',"outlines--linechart");
  
  //  lines.append('path').datum(data)
- //    .attr('class','linepath')
+ //    .attr('id','linepath')
  //    .attr('d', line);
 
   var salaryLines = svg.append('g').attr('class',"salary--linechart");
@@ -329,7 +329,6 @@ function interpolateSalary(userSalary){
 }
 
 function updateAnalysis(userSalary){
-  console.log(salaryData[salaryData.length-1])
   var percent = Math.round(salaryData[salaryData.length-1].cumulCitizens / totalCitizens * 100);
   return ['of Americans earn','less than $' + userSalary, percent + '%'];
 }
