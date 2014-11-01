@@ -216,7 +216,7 @@ function initialRender(data){
     .style('fill','white')
     .attr('text-anchor','end')
     .attr('transform',function(){
-      return 'translate(' + xScale(userSalary) + ',' + ((maxWindowDim - margin.top - margin.bottom)/2+36) + ')'
+      return 'translate(' + (xScale(userSalary) - 6) + ',' + ((maxWindowDim - margin.top - margin.bottom)/2+30) + ')'
     })
 
   salary.selectAll('.salary--description').data(textData.slice(0,2)).enter()
@@ -225,7 +225,7 @@ function initialRender(data){
     .text(function(d){ return d; })
     .style('font-size', 16)
     .attr('transform',function(d,i){
-      return 'translate(' + xScale(userSalary) + ',' + (maxWindowDim - margin.top - margin.bottom + i*28 + 18)/2 + ')'
+      return 'translate(' + (xScale(userSalary) + 6) + ',' + (maxWindowDim - margin.top - margin.bottom + i*28 + 30)/2 + ')'
     })
 }
 
@@ -286,12 +286,12 @@ function updateWindow(){
 
   d3.selectAll('.salary--percent')
     .attr('transform',function(){
-      return 'translate(' + xScale(userSalary) + ',' + ((maxWindowDim - margin.top - margin.bottom)/2+36) + ')'
+      return 'translate(' + (xScale(userSalary) - 6) + ',' + ((maxWindowDim - margin.top - margin.bottom)/2+30) + ')'
     })
 
   d3.selectAll('.salary--description')
     .attr('transform',function(d,i){
-      return 'translate(' + xScale(userSalary) + ',' + (maxWindowDim - margin.top - margin.bottom + i*28 + 18)/2 + ')'
+      return 'translate(' + (xScale(userSalary) + 6) + ',' + (maxWindowDim - margin.top - margin.bottom + i*28 + 30)/2 + ')'
     })
 
 }
@@ -310,13 +310,13 @@ function calcPercentage(){
   d3.selectAll('.salary--percent').data(textData.slice(2))
     .text(function(d){ return d; }).transition().duration(1000)
     .attr('transform',function(){
-      return 'translate(' + xScale(userSalary) + ',' + ((maxWindowDim - margin.top - margin.bottom)/2+36) + ')'
+      return 'translate(' + (xScale(userSalary) - 6) + ',' + ((maxWindowDim - margin.top - margin.bottom)/2+30) + ')'
     })
 
   d3.selectAll('.salary--description').data(textData.slice(0,2))
     .text(function(d){ return d; }).transition().duration(1000)
     .attr('transform',function(d,i){
-      return 'translate(' + xScale(userSalary) + ',' + (maxWindowDim - margin.top - margin.bottom + i*28 + 18)/2 + ')'
+      return 'translate(' + (xScale(userSalary) + 6) + ',' + (maxWindowDim - margin.top - margin.bottom + i*28 + 30)/2 + ')'
     })
 }
 
