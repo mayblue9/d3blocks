@@ -8,7 +8,52 @@
 }
 
 body {
-  font: 10px sans-serif;
+  font: 10px Helvetica;
+}
+
+div {
+  width: 50%;
+  margin: 0 auto;
+}
+
+h3 {
+  display: inline;
+  color: #AFAEA8;
+  font-size:2em;
+
+}
+
+input[type="text"] {
+  color: #AFAEA8;
+  appearance: none;
+  width:150px;
+  height:40px;
+  font-size:2em;
+  background:transparent;
+  border:none;
+  border-bottom:solid 2px #bab8af;
+  text-align:center;
+  transition: color 0.6s ease;
+  transition: border-color 0.6s ease;
+}
+
+::-webkit-input-placeholder {
+  color: #bab8af;
+  transition: color 0.3s ease;
+}
+
+:focus::-webkit-input-placeholder {
+  color: transparent;
+  transition: color 0.3s ease;
+}
+
+input[type="text"]:focus {
+  color: #6BB3A2;
+  outline:none;
+  border:none;
+  border-bottom:solid 2px #6BB3A2;
+  transition: color 1s ease;
+  transition: border-color 1s ease;
 }
 
 .axis path,
@@ -33,19 +78,23 @@ body {
 }
 
 .salary--linearea {
-    fill: #118b70;
-    stroke-width: 0;
+  fill: #118b70;
+  stroke-width: 0;
 }
 
 .outlines--label {
-  font-size: 13px;
-  font-weight: 200;
+  font-size: 12px;
+  fill: #868174;
+  stroke: none;
+  font-weight: 300;
+  font-family: Helvetica, sans-serif;
 }
 
 </style>
 <body>
   <div>
-  <input id="usersalary" style="width:100%" placeholder="input your salary" onkeyup="calcPercentage()" onmousedown="calcPercentage()" value="100000" onmouseup="calcPercentage()" type="number" step="5000" min="0">
+    <h3>input your salary</h3>
+    <input id="usersalary" placeholder="input your salary" onkeyup="calcPercentage()" onmousedown="calcPercentage()" value="$100,000" onmouseup="calcPercentage()" type="text">
   </div>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
@@ -79,19 +128,19 @@ var area = d3.svg.area().interpolate('cardinal')
   .y1(function(d){ return yScale(d.citizens); });
 
 // Based on Dennis Gilbert, 2002
-var brackets = [{desc:'underclass', lowerbracket: 0 * 200000}, 
-                {desc:'working poor',lowerbracket: 0.12 * 200000},
-                {desc:'working class',lowerbracket: 0.25 * 200000},
-                {desc:'lower middle class',lowerbracket: 0.55 * 200000},
-                {desc:'upper middle class',lowerbracket: 0.85 * 200000},
-                {desc:'upper class',lowerbracket: 0.99 * 200000}];
+var brackets = [{desc:'underclass', lowerbracket: 0 * 200000, lineshift: .18 }, 
+                {desc:'working poor',lowerbracket: 0.12 * 200000, lineshift: .30 },
+                {desc:'working class',lowerbracket: 0.25 * 200000, lineshift: .22 },
+                {desc:'lower middle class',lowerbracket: 0.55 * 200000, lineshift: .10},
+                {desc:'upper middle class',lowerbracket: 0.85 * 200000, lineshift: .04 },
+                {desc:'upper class',lowerbracket: 0.99 * 200000, lineshift: .02 }];
 
 var filteredData = [];
 var salaryData = [];
 var textData = [];
 var yMax = 0;
 var totalCitizens = 0;
-var userSalary = Math.min(document.getElementById('usersalary').value,201000);
+var userSalary = Math.min(Number(document.getElementById('usersalary').value.replace(/[^\d\.]/g,'').trim()),201000);
 
 d3.csv('averages.csv',function(data){
   data.forEach(function(item){
@@ -129,14 +178,14 @@ function initialRender(data){
   },0);
 
   xScale.domain([0,201000]);
-  yScale.domain([0,yMax]);
+  yScale.domain([0,yMax*1.5]);
 
   var salary = svg.append('g').attr('class','salary')
     .style('fill','#11a282')
 
   var outlines = svg.append('g').attr('class','outlines')
     .style('fill','none')
-    .style('stroke','#BAB8AF')
+    .style('stroke','#bab8af')
     .style('stroke-width',1)
 
   outlines.append('g').attr('class','outlines--circles').selectAll('.outlines--circle').data(brackets).enter().append('circle')
@@ -182,7 +231,9 @@ function initialRender(data){
     .attr('x2', function(d){
       return xScale(d.lowerbracket) + margin.right - margin.left;
     })
-    .attr('y2', (maxWindowDim - margin.top - margin.bottom)/2 + 1)
+    .attr('y2', function(d){
+      return (maxWindowDim - margin.top - margin.bottom)/2 - d.lineshift * maxWindowDim;
+    })
 
     outlines.append('g').attr('class','outlines--labels')
       .selectAll('.outlines--label').data(brackets).enter().append('text')
@@ -212,14 +263,14 @@ function initialRender(data){
  //    .attr('id','linepath')
  //    .attr('d', line);
 
-  var salaryLines = svg.append('g').attr('class',"salary--linechart");
+  // var salaryLines = svg.append('g').attr('class',"salary--linechart");
 
-  salaryLines.append('path').datum(salaryData)
-    .attr('class',"salarypath")
-    .attr('d', line)
-    .style('stroke','purple')
-    .style('stroke-width',2)
-    .style('fill','none')
+  // salaryLines.append('path').datum(salaryData)
+  //   .attr('class',"salarypath")
+  //   .attr('d', line)
+  //   .style('stroke','purple')
+  //   .style('stroke-width',2)
+  //   .style('fill','none')
 
   salary.selectAll('.salary--percent').data(textData.slice(2)).enter()
     .append('text')
@@ -277,12 +328,14 @@ function updateWindow(){
     .attr('x2', function(d){
       return xScale(d.lowerbracket) + margin.right - margin.left;
     })
-    .attr('y2', (maxWindowDim - margin.top - margin.bottom)/2 + 1)
+    .attr('y2', function(d){
+      return (maxWindowDim - margin.top - margin.bottom)/2 - d.lineshift * maxWindowDim;
+    })
 
   d3.selectAll('.salary--circle')
-    .attr('cx', xScale(Math.min(document.getElementById('usersalary').value, 201000)) / 2 )
+    .attr('cx', xScale(Math.min(Number(document.getElementById('usersalary').value.replace(/[^\d\.]/g,'').trim()),201000)) / 2 )
     .attr('cy', (maxWindowDim - margin.top - margin.bottom)/2 )
-    .attr('r',  xScale(Math.min(document.getElementById('usersalary').value, 201000)) / 2 )
+    .attr('r',  xScale(Math.min(Number(document.getElementById('usersalary').value.replace(/[^\d\.]/g,'').trim()),201000)) / 2 )
 
   d3.select('.outline--cover')
     .attr('y', margin.top - margin.bottom )
@@ -318,7 +371,7 @@ function updateWindow(){
 }
 
 function calcPercentage(){
-  userSalary = Math.min(document.getElementById('usersalary').value,201000);
+  userSalary = Math.min(Number(document.getElementById('usersalary').value.replace(/[^\d\.]/g,'').trim()),201000);
   salaryData = interpolateSalary(userSalary);
   textData = updateAnalysis(userSalary);
 
@@ -354,7 +407,7 @@ function interpolateSalary(userSalary){
 function updateAnalysis(userSalary){
   var format = d3.format('$,');
   var percent = Math.round(salaryData[salaryData.length-1].cumulCitizens / totalCitizens * 100);
-  return ['of Americans earn','less than ' + format(d3.round(userSalary,2)), percent + '%'];
+  return ['of Americans earn','less than ' + format(d3.round(Number(document.getElementById('usersalary').value.replace(/[^\d\.]/g,'').trim()),2)), percent + '%'];
 }
 
 window.onresize = updateWindow;
