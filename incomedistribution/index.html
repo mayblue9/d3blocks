@@ -15,7 +15,7 @@ body {
 }
 
 #userinput {
-  width: 50%;
+  width: 280px;
   margin: 0 auto;
 }
 
@@ -107,7 +107,7 @@ p {
 
 </style>
 <body>
-  <h1>US Income Distribution</h1>
+  <!-- <h1>US Income Distribution</h1> -->
   <div id="userinput">
     <h4>input your salary</h4>
     <input id="usersalary" placeholder="input your salary" onkeyup="calcPercentage()" onmousedown="calcPercentage()" value="$100,000" onmouseup="calcPercentage()" type="text">
@@ -118,7 +118,7 @@ p {
 <script>
 
 var width = window.innerWidth;
-var height = window.innerHeight - 125;
+var height = window.innerHeight - 80;
 
 // top and right dont seem to work
 var margin = { top:20, right:20, bottom:20, left:20};
@@ -147,9 +147,9 @@ var area = d3.svg.area().interpolate('cardinal')
   .y1(function(d){ return yScale(d.citizens); });
 
 // Based on Dennis Gilbert, 2002
-var brackets = [{desc:'underclass', lowerbracket: 0 * 200000, lineshift: .18 }, 
-                {desc:'working poor',lowerbracket: 0.12 * 200000, lineshift: .30 },
-                {desc:'working class',lowerbracket: 0.25 * 200000, lineshift: .22 },
+var brackets = [{desc:'underclass', lowerbracket: 0 * 200000, lineshift: .20 }, 
+                {desc:'working poor',lowerbracket: 0.12 * 200000, lineshift: .33 },
+                {desc:'working class',lowerbracket: 0.25 * 200000, lineshift: .25 },
                 {desc:'lower middle class',lowerbracket: 0.55 * 200000, lineshift: .10},
                 {desc:'upper middle class',lowerbracket: 0.85 * 200000, lineshift: .04 },
                 {desc:'upper class',lowerbracket: 0.99 * 200000, lineshift: .02 }];
@@ -322,7 +322,7 @@ function initialRender(data){
 
 function updateWindow(){
   width = window.innerWidth;
-  height = window.innerHeight - 125;  
+  height = window.innerHeight - 80;  
   maxWindowDim = width - margin.right - margin.left > height - margin.bottom - margin.top ? height : width;
   adjustLeft = width - margin.right - margin.left > height - margin.bottom - margin.top ?( width - margin.right - margin.left - (height - margin.bottom - margin.top))/2 : 0;
 
