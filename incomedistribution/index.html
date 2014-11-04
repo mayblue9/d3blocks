@@ -5,30 +5,32 @@
 *{
   overflow: hidden;
   box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
   font: 10px Helvetica;
+  color: #868174;
 }
 
-div {
-  width: 50%;
-  margin: 0 auto;
+#userinput {
+  width: 60%;
+  margin: 0 auto 0 25%;
 }
 
-h3 {
+h4 {
   display: inline;
   color: #AFAEA8;
-  font-size:2em;
-
+  font-size:1.5em;
 }
 
 input[type="text"] {
   color: #AFAEA8;
   appearance: none;
   width:150px;
-  height:40px;
-  font-size:2em;
+  height:30px;
+  font-size:1.75em;
   background:transparent;
   border:none;
   border-bottom:solid 2px #bab8af;
@@ -90,23 +92,39 @@ input[type="text"]:focus {
   font-family: Helvetica, sans-serif;
 }
 
+h1 {
+  background-color:#6BB3A2;
+  opacity: 0.7;
+  color: #fff;
+  padding-left: 30px;
+  padding-top: 20px;
+}
+
+p {
+  padding-left: 30px;
+  padding-right: 30px;
+}
+
 </style>
 <body>
-  <div>
-    <h3>input your salary</h3>
+  <h1>US Income Distribution</h1>
+  <div id="userinput">
+    <h4>input your salary</h4>
     <input id="usersalary" placeholder="input your salary" onkeyup="calcPercentage()" onmousedown="calcPercentage()" value="$100,000" onmouseup="calcPercentage()" type="text">
   </div>
+  <div class="container"></div>
+  <p>Source: U.S. Census Bureau, Current Population Survey, 2013 Annual Social and Economic Supplement.</p>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
 var width = window.innerWidth;
-var height = window.innerHeight;
+var height = window.innerHeight - 125;
 
 // top and right dont seem to work
-var margin = { top:50, right:50, bottom:50, left:50};
+var margin = { top:20, right:20, bottom:20, left:20};
 var maxWindowDim = width - margin.right - margin.left > height - margin.bottom - margin.top ? height : width;
 
-var svg = d3.select('body').append('svg')
+var svg = d3.select('.container').append('svg')
   .attr('width', width).attr('height',height)
   .append('g')
     .attr('class','graph--container')
@@ -303,7 +321,7 @@ function initialRender(data){
 
 function updateWindow(){
   width = window.innerWidth;
-  height = window.innerHeight;  
+  height = window.innerHeight - 125;  
   maxWindowDim = width - margin.right - margin.left > height - margin.bottom - margin.top ? height : width;
 
   xScale.range([0,maxWindowDim - margin.left - margin.right])
@@ -411,5 +429,6 @@ function updateAnalysis(userSalary){
 }
 
 window.onresize = updateWindow;
+
 </script>
 </body>
