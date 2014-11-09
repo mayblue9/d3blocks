@@ -113,7 +113,8 @@ p {
     <input id="usersalary" placeholder="input your salary" onkeyup="calcPercentage()" onmousedown="calcPercentage()" value="$100,000" onmouseup="calcPercentage()" type="text">
   </div>
   <div class="container"></div>
-  <p>Source: U.S. Census Bureau, Current Population Survey, 2013 Annual Social and Economic Supplement.</p>
+  <p>Data Source: U.S. Census Bureau, Current Population Survey, 2013 Annual Social and Economic Supplement.</p>
+  <p>Class Bracket Source: Dennis Gilbert, 2002.</p>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script>
 
@@ -265,31 +266,12 @@ function initialRender(data){
       .style('text-anchor', 'end')
       .attr("dy", "0.9em")
 
-  // var xAxis = d3.svg.axis().scale(xScale).orient('bottom');
-  // svg.append('g').attr('class','x axis').call(xAxis)
-  //   .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
-
   var fill = outlines.append('g').attr('class',"outlines--lineareas");
 
   fill.append('path').datum(data)
     .attr('class',"outlines--linearea")
     .attr('d', area)
     .style('opacity',0.3);
-
- // var lines = outlines.append('g').attr('class',"outlines--linechart");
- 
- //  lines.append('path').datum(data)
- //    .attr('id','linepath')
- //    .attr('d', line);
-
-  // var salaryLines = svg.append('g').attr('class',"salary--linechart");
-
-  // salaryLines.append('path').datum(salaryData)
-  //   .attr('class',"salarypath")
-  //   .attr('d', line)
-  //   .style('stroke','purple')
-  //   .style('stroke-width',2)
-  //   .style('fill','none')
 
   salary.selectAll('.salary--percent').data(textData.slice(2)).enter()
     .append('text')
@@ -364,12 +346,7 @@ function updateWindow(){
     .attr('width', maxWindowDim - margin.left )
     .attr('height', (maxWindowDim - margin.top - margin.bottom) / 2)
 
-  // xAxis = d3.svg.axis().scale(xScale).orient('bottom');
-  // d3.selectAll('.x.axis').call(xAxis)
-  //   .attr('transform', 'translate(' + 0 + ',' + (maxWindowDim - margin.top - margin.bottom)/2 + ')');
-
   area.y0((maxWindowDim - margin.top - margin.bottom)/2 + .5)
-  // d3.selectAll('.linepath').attr('d', line );
   d3.selectAll('.outlines--linearea').attr('d', area );
   d3.selectAll('.salary--linearea').attr('d',area);
 
